@@ -29,7 +29,7 @@
 
 <div align="center">
   <h3>🎥 App Demo</h3>
-  <video src="assets/Recording.mp4" width="500" controls="controls">
+  <video src="assets/Recording.gif" width="500" controls="controls">
     Your browser does not support the video tag.
   </video>
 </div>
