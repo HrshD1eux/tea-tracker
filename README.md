@@ -3,7 +3,7 @@
   <h1> Tea Tracker</h1>
 </div>
 
-**Tea Tracker** is a lightweight, customizable Android application designed to help you effortlessly log your daily tea and biscuit consumption. Built with modern Android development practices, it features instant-tap home screen widgets so you can log your breaks without even opening the app.
+**Tea Tracker** is a lightweight, customizable Android application designed to help you effortlessly log your daily tea and biscuit consumption. Built with modern Android development practices, it offers an intuitive interface, persistent storage, and convenient home screen widgets for quick access.
 
 ---
 
@@ -29,9 +29,7 @@
 
 <div align="center">
   <h3>🎥 App Demo</h3>
-  <video src="assets/Recording.gif" width="500" controls="controls">
-    Your browser does not support the video tag.
-  </video>
+  <img src="assets/Recording.gif" width="500" alt="App Demo GIF">
 </div>
 
 ---
