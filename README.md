@@ -1,4 +1,7 @@
-# 🍵 Tea Tracker
+<div align="center">
+  <img src="assets/app_icon.png" width="128" height="128" alt="Tea Tracker Icon" />
+  <h1>🍵 Tea Tracker</h1>
+</div>
 
 **Tea Tracker** is a lightweight, customizable Android application designed to help you effortlessly log your daily tea and biscuit consumption. Built with modern Android development practices, it features instant-tap home screen widgets so you can log your breaks without even opening the app.
 
@@ -11,6 +14,27 @@
 *   **Material Design 3:** A beautiful, responsive, and modern user interface built entirely with Jetpack Compose.
 *   **Local Storage:** All your data is securely stored on your device using Room Database.
 *   **Customizable:** Easily adaptable for different types of beverages or snacks.
+
+## 📸 Screenshots
+
+| Home Page | History |
+| :---: | :---: |
+| <img src="assets/home.png" width="250" alt="Home Page Screenshot"> | <img src="assets/history.png" width="250" alt="History Screenshot"> |
+
+| Analytics | Settings |
+| :---: | :---: |
+| <img src="assets/analytics.png" width="250" alt="Analytics Screenshot"> | <img src="assets/setting.png" width="250" alt="Settings Screenshot"> |
+
+<br>
+
+<div align="center">
+  <h3>🎥 App Demo</h3>
+  <video src="assets/Recording.webm" width="500" controls="controls">
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+---
 
 ## 🛠️ Tech Stack
 
@@ -32,7 +56,7 @@ This project leverages the modern Android development ecosystem:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/yourusername/tea-tracker.git
+    git clone https://github.com/HrshD1eux/tea-tracker.git
     ```
     *(Alternatively, just open the existing local folder in Android Studio).*
 
@@ -51,6 +75,6 @@ This project leverages the modern Android development ecosystem:
 5.  **Run the app:**
     Select your preferred emulator or physical device via USB debugging and click the **Run** ▶️ button in Android Studio.
 
-## 👨💻 Developer
+## 👨‍💻 Developer
 
 Developed by **hrshd1eux**
