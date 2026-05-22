@@ -29,7 +29,7 @@
 
 <div align="center">
   <h3>🎥 App Demo</h3>
-  <img src="assets/Recording.gif" width="500" alt="App Demo GIF">
+  <img src="assets/Recording.gif" width="250" alt="App Demo GIF">
 </div>
 
 ---
