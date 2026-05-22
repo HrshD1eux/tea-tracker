@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tea Tracker Theme Colors -->
+    <color name="tea_primary">#6D4C41</color>
+    <color name="tea_primary_light">#8D6E63</color>
+    <color name="tea_primary_dark">#4E342E</color>
+    <color name="tea_cream">#FDFBF7</color>
+    <color name="tea_beige">#F5EBE6</color>
+    <color name="tea_orange">#FF8A65</color>
+    <color name="tea_orange_light">#FFAB91</color>
+    <color name="tea_accent">#D84315</color>
+    <color name="tea_text_dark">#2E1C16</color>
+    <color name="tea_text_light">#FDFBF7</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
