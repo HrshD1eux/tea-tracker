@@ -1,8 +1,56 @@
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
+}
+
+// Load and bump version from version.properties
+val versionPropertiesFile = file("version.properties")
+val versionProperties = Properties()
+if (versionPropertiesFile.exists()) {
+    FileInputStream(versionPropertiesFile).use { fis ->
+        versionProperties.load(fis)
+    }
+}
+
+var currentVersionCode = (versionProperties.getProperty("VERSION_CODE") ?: "1").toInt()
+var currentVersionName = versionProperties.getProperty("VERSION_NAME_BASE") ?: "1.0"
+
+// Determine if we are building to bump version
+val isBuildTask = gradle.startParameter.taskNames.any { taskName ->
+    val lower = taskName.lowercase()
+    lower.contains("assemble") || lower.contains("bundle") || lower.contains("install") || lower.contains("build") || lower.contains("package")
+}
+
+if (isBuildTask) {
+    currentVersionCode += 1
+    
+    // Bump version name (e.g. 1.0 -> 1.1)
+    val parts = currentVersionName.split(".")
+    currentVersionName = if (parts.isNotEmpty()) {
+        val lastIdx = parts.size - 1
+        val lastVal = parts[lastIdx].toIntOrNull()
+        if (lastVal != null) {
+            val updatedParts = parts.toMutableList()
+            updatedParts[lastIdx] = (lastVal + 1).toString()
+            updatedParts.joinToString(".")
+        } else {
+            "${currentVersionName}.1"
+        }
+    } else {
+        "1.1"
+    }
+
+    versionProperties.setProperty("VERSION_CODE", currentVersionCode.toString())
+    versionProperties.setProperty("VERSION_NAME_BASE", currentVersionName)
+    FileOutputStream(versionPropertiesFile).use { fos ->
+        versionProperties.store(fos, "Auto-incremented during build")
+    }
 }
 
 android {
@@ -13,8 +61,8 @@ android {
     applicationId = "com.hrshd1eux.teatracker"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = currentVersionCode
+    versionName = currentVersionName
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -40,7 +88,12 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
+      val hasReleaseKey = !System.getenv("STORE_PASSWORD").isNullOrEmpty() && !System.getenv("KEY_PASSWORD").isNullOrEmpty()
+      signingConfig = if (hasReleaseKey) {
+        signingConfigs.getByName("release")
+      } else {
+        signingConfigs.getByName("debug")
+      }
     }
     debug {
       // signingConfig = signingConfigs.getByName("debugConfig")

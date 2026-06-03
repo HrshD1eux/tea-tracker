@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.DateUtils
 import com.example.data.TeaRecord
 import com.example.ui.TeaViewModel
+import com.example.BuildConfig
 import java.util.Calendar
 
 // ==========================================
@@ -136,11 +137,12 @@ fun DecorativeBiscuitIcon(modifier: Modifier = Modifier, color: Color) {
 fun TeaStackedBarChart(
     data: List<TeaRecord>,
     isWeekly: Boolean, // True: last 7 days. False: current month distribution
+    selectedMonth: String = DateUtils.getCurrentMonthYearString(),
     primaryColor: Color = Color(0xFF7D5233),
     secondaryColor: Color = Color(0xFFF4A261)
 ) {
     // Compile values
-    val chartData = remember(data, isWeekly) {
+    val chartData = remember(data, isWeekly, selectedMonth) {
         if (isWeekly) {
             // Get last 7 entries
             data.take(7).reversed().map { r ->
@@ -148,8 +150,7 @@ fun TeaStackedBarChart(
             }
         } else {
             // Group by formatted months or list current month entries
-            val currentMonth = DateUtils.getCurrentMonthYearString()
-            data.filter { it.date.startsWith(currentMonth) }.reversed().map { r ->
+            data.filter { it.date.startsWith(selectedMonth) }.reversed().map { r ->
                 Pair(DateUtils.getShortDate(r.date), r)
             }
         }
@@ -950,34 +951,43 @@ fun AnalyticsScreen(
     val biscuitTeaPrice by viewModel.biscuitTeaPrice.collectAsState()
     val currencySymbol by viewModel.currencySymbol.collectAsState()
 
-    // Calculate Analytics summaries
-    val thisMonth = DateUtils.getCurrentMonthYearString()
-    val thisMonthRecords = remember(allRecords) {
-        allRecords.filter { it.date.startsWith(thisMonth) }
+    // Calculate Analytics summaries based on selected month
+    val availableMonths = remember(allRecords) {
+        val currentMonth = DateUtils.getCurrentMonthYearString()
+        val recordMonths = allRecords.map { DateUtils.getMonthYearString(it.date) }
+        (recordMonths + currentMonth).distinct().sortedDescending()
     }
 
-    val totalThisMonth = remember(thisMonthRecords) {
-        thisMonthRecords.sumOf { it.totalTeaCount }
+    var selectedMonth by remember(availableMonths) {
+        mutableStateOf(availableMonths.firstOrNull() ?: DateUtils.getCurrentMonthYearString())
     }
 
-    val plainThisMonth = remember(thisMonthRecords) {
-        thisMonthRecords.sumOf { it.teaCount }
+    val selectedMonthRecords = remember(allRecords, selectedMonth) {
+        allRecords.filter { it.date.startsWith(selectedMonth) }
     }
 
-    val biscuitThisMonth = remember(thisMonthRecords) {
-        thisMonthRecords.sumOf { it.biscuitTeaCount }
+    val totalSelectedMonth = remember(selectedMonthRecords) {
+        selectedMonthRecords.sumOf { it.totalTeaCount }
     }
 
-    val costThisMonth = remember(plainThisMonth, biscuitThisMonth, teaPrice, biscuitTeaPrice) {
-        (plainThisMonth * teaPrice) + (biscuitThisMonth * biscuitTeaPrice)
+    val plainSelectedMonth = remember(selectedMonthRecords) {
+        selectedMonthRecords.sumOf { it.teaCount }
     }
 
-    val averageThisMonth = remember(thisMonthRecords) {
-        if (thisMonthRecords.isEmpty()) 0.0 else totalThisMonth.toDouble() / thisMonthRecords.size
+    val biscuitSelectedMonth = remember(selectedMonthRecords) {
+        selectedMonthRecords.sumOf { it.biscuitTeaCount }
     }
 
-    val highestDayRecord = remember(thisMonthRecords) {
-        thisMonthRecords.maxByOrNull { it.totalTeaCount }
+    val costSelectedMonth = remember(plainSelectedMonth, biscuitSelectedMonth, teaPrice, biscuitTeaPrice) {
+        (plainSelectedMonth * teaPrice) + (biscuitSelectedMonth * biscuitTeaPrice)
+    }
+
+    val averageSelectedMonth = remember(selectedMonthRecords) {
+        if (selectedMonthRecords.isEmpty()) 0.0 else totalSelectedMonth.toDouble() / selectedMonthRecords.size
+    }
+
+    val highestDayRecord = remember(selectedMonthRecords) {
+        selectedMonthRecords.maxByOrNull { it.totalTeaCount }
     }
 
     LazyColumn(
@@ -995,6 +1005,93 @@ fun AnalyticsScreen(
                 letterSpacing = 1.5.sp,
                 modifier = Modifier.padding(top = 16.dp)
             )
+        }
+
+        // Month Selector Dropdown
+        item {
+            var dropdownExpanded by remember { mutableStateOf(false) }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { dropdownExpanded = true },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, Color(0xFFEFEBE9)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = "Select Month",
+                                tint = Color(0xFF7D5233),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "SELECT MONTH",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF8D6E63),
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.1.sp
+                                )
+                                Text(
+                                    text = DateUtils.formatMonthYear(selectedMonth),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF5D4037)
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Expand month selector",
+                            tint = Color(0xFF8D6E63),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = dropdownExpanded,
+                    onDismissRequest = { dropdownExpanded = false },
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, Color(0xFFEFEBE9), RoundedCornerShape(16.dp))
+                ) {
+                    availableMonths.forEach { month ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = DateUtils.formatMonthYear(month),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (month == selectedMonth) FontWeight.Bold else FontWeight.Normal,
+                                    color = Color(0xFF5D4037)
+                                )
+                            },
+                            onClick = {
+                                selectedMonth = month
+                                dropdownExpanded = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
         }
 
         // Monthly Expenditure Card
@@ -1030,14 +1127,14 @@ fun AnalyticsScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            "$currencySymbol${String.format("%.2f", costThisMonth)}",
+                            "$currencySymbol${String.format("%.2f", costSelectedMonth)}",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color(0xFF5D4037)
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            "Based on: $plainThisMonth plain ($currencySymbol${String.format("%.2f", plainThisMonth * teaPrice)}) + $biscuitThisMonth biscuit ($currencySymbol${String.format("%.2f", biscuitThisMonth * biscuitTeaPrice)})",
+                            "Based on: $plainSelectedMonth plain ($currencySymbol${String.format("%.2f", plainSelectedMonth * teaPrice)}) + $biscuitSelectedMonth biscuit ($currencySymbol${String.format("%.2f", biscuitSelectedMonth * biscuitTeaPrice)})",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFA1887F)
                         )
@@ -1069,7 +1166,7 @@ fun AnalyticsScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            "$totalThisMonth",
+                            "$totalSelectedMonth",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color(0xFF5D4037)
@@ -1099,7 +1196,7 @@ fun AnalyticsScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            String.format("%.1f", averageThisMonth),
+                            String.format("%.1f", averageSelectedMonth),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color(0xFF5D4037)
@@ -1154,7 +1251,7 @@ fun AnalyticsScreen(
                         Spacer(modifier = Modifier.height(2.dp))
                         if (highestDayRecord != null) {
                             Text(
-                                "${highestDayRecord!!.totalTeaCount} Cups on ${DateUtils.getShortDate(highestDayRecord!!.date)} (${highestDayRecord!!.day})",
+                                "${highestDayRecord.totalTeaCount} Cups on ${DateUtils.getShortDate(highestDayRecord.date)} (${highestDayRecord.day})",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF5D4037)
@@ -1196,7 +1293,7 @@ fun AnalyticsScreen(
         item {
             Column {
                 Text(
-                    "CURRENT MONTH RECORD PATTERNS",
+                    "RECORD PATTERNS FOR ${DateUtils.formatMonthYear(selectedMonth).uppercase()}",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF8D6E63),
@@ -1206,6 +1303,7 @@ fun AnalyticsScreen(
                 TeaStackedBarChart(
                     data = allRecords,
                     isWeekly = false,
+                    selectedMonth = selectedMonth,
                     primaryColor = Color(0xFF7D5233),
                     secondaryColor = Color(0xFFF4A261)
                 )
@@ -1545,7 +1643,7 @@ fun SettingsScreen(
                 
                 // Version info
                 Text(
-                    "Version 1.0",
+                    "Version ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFA1887F),
                     fontWeight = FontWeight.Bold

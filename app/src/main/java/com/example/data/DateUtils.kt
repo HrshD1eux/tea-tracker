@@ -66,4 +66,16 @@ object DateUtils {
             dateString
         }
     }
+
+    fun formatMonthYear(monthStr: String): String {
+        return try {
+            val parser = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+            val formatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+            val date = parser.parse(monthStr)
+            if (date != null) formatter.format(date) else monthStr
+        } catch (e: Exception) {
+            monthStr
+        }
+    }
 }
+
